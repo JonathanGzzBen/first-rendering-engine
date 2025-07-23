@@ -119,7 +119,7 @@ class Program {
     if (location == -1) {
       return std::unexpected(
           Error{.message = std::format("Could not get uniform location of '{}'",
-                                       location)});
+                                       uniform_name)});
     }
     glUniformMatrix4fv(location, 1, GL_FALSE, &mat[0][0]);
     glUseProgram(0);

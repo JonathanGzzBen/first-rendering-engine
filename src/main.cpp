@@ -102,7 +102,7 @@ auto main() -> int {
   }
 
   auto view_matrix = glm::mat4(1.0f);
-  view_matrix = glm::translate(view_matrix, glm::vec3(0.0F, 0.0F, -3.0F));
+  view_matrix = glm::translate(view_matrix, glm::vec3(0.0F, 0.0F, 0.0F));
   if (const auto res = program->get()->SetMat4("view", view_matrix); !res) {
     std::println(std::cerr, "Could not set view matrix: {}",
                  res.error().message);
@@ -110,20 +110,21 @@ auto main() -> int {
     return 1;
   }
   const auto projection_matrix =
-      glm::perspective(glm::radians(45.0F), 540.0F / 480.0F, 0.1F, 100.0F);
-  if (const auto res = program->get()->SetMat4("projection", projection_matrix);
-      !res) {
-    std::println(std::cerr, "Could not set projection matrix: {}",
-                 res.error().message);
-    glfwTerminate();
-    return 1;
-  }
+      glm::ortho(-1.0F, 1.0F, -1.0F, 1.0F, -1.0F, 1.0F);
 
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   while (!glfwWindowShouldClose(window)) {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    renderer->get()->Draw(**program, **triangle_mesh, glm::mat4(1.0F));
+    constexpr auto triangle_model_matrix = glm::mat4(1.0f);
+    if (const auto res =
+            renderer->get()->Draw(**program, **triangle_mesh, projection_matrix,
+                                  triangle_model_matrix);
+        !res) {
+      std::println(std::cerr, "Could not draw mesh: {}", res.error().message);
+      glfwTerminate();
+      return 1;
+    }
 
     glfwSwapBuffers(window);
     glfwPollEvents();

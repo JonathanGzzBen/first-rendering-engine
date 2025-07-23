@@ -44,8 +44,14 @@ class Renderer {
   }
 
   auto Draw(const Program& program, const Mesh& mesh,
-            const glm::mat4& model_matrix = glm::mat4(1.0F)) const
-      -> std::expected<void, Error> {
+            const glm::mat4& projection_matrix,
+            const glm::mat4& model_matrix) const -> std::expected<void, Error> {
+    if (const auto res = program.SetMat4("projection", projection_matrix);
+        !res) {
+      return std::unexpected(
+          Error{.message = std::format("Could not set projection matrix: {}",
+                                       res.error().message)});
+    }
     if (const auto res = program.SetMat4("model", model_matrix); !res) {
       return std::unexpected(Error{.message = "Could not set model matrix"});
     }
