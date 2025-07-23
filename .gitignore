@@ -1,3 +1,14 @@
+# CLion
+cmake-build-debug*/
+cmake-build-release*/
+.idea/
+
+# CMake
+build/
+
+# Clangd
+.cache/
+
 # Prerequisites
 *.d
 
