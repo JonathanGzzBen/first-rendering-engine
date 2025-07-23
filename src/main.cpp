@@ -4,6 +4,7 @@
 #include <iostream>
 #include <print>
 
+#include "frengine/program.h"
 #include "frengine/renderer.h"
 
 auto glfw_error_callback(int error, const char *description) -> void {
@@ -58,6 +59,15 @@ auto main() -> int {
                             nullptr, GL_TRUE);
     }
   }();
+
+  const auto program =
+      frengine::Program::Create("shaders/vertex.glsl", "shaders/fragment.glsl");
+  if (!program) {
+    std::println(std::cerr, "Could not create program: {}",
+                 program.error().message);
+    glfwTerminate();
+    return 1;
+  }
 
   std::println("{}", frengine::Renderer::GetHelloWorld());
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
