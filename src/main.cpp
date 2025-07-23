@@ -5,6 +5,7 @@
 #include <iostream>
 #include <print>
 
+#include "frengine/camera.h"
 #include "frengine/program.h"
 #include "frengine/renderer.h"
 
@@ -101,6 +102,69 @@ auto main() -> int {
     return 1;
   }
 
+  auto camera_position = glm::vec3(0.0F, 0.0F, 3.0F);
+  auto camera_front = glm::vec3(0.0F, 0.0F, -1.0F);
+  constexpr auto camera_up = glm::vec3(0.0F, 1.0F, 0.0F);
+  frengine::Camera camera(camera_position, camera_front, camera_up);
+  const auto handle_input = [&window, &camera](const float delta_time) {
+    auto movement_direction = glm::vec3(0.0F, 0.0F, 0.0F);
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+      movement_direction += camera.Front();
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+      movement_direction -= camera.Front();
+    }
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+      movement_direction -= camera.Up();
+    }
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+      movement_direction += camera.Up();
+    }
+    const auto right = glm::normalize(glm::cross(camera.Front(), camera.Up()));
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+      movement_direction -= right;
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+      movement_direction += right;
+    }
+    if (movement_direction != glm::vec3(0.0F, 0.0F, 0.0F)) {
+      static constexpr float movement_speed = 1.0F;
+      camera.Pan(delta_time * movement_speed *
+                 glm::normalize(movement_direction));
+    }
+
+    // Camera rotation
+    static constexpr auto rotation_speed = 40.0F;
+    auto pitch_rotation = 0.0F;
+    auto yaw_rotation = 0.0F;
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+      pitch_rotation -= rotation_speed * delta_time;
+    }
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+      pitch_rotation += rotation_speed * delta_time;
+    }
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+      yaw_rotation -= rotation_speed * delta_time;
+    }
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+      yaw_rotation += rotation_speed * delta_time;
+    }
+    if (pitch_rotation != 0.0F) {
+      camera.AddPitch(pitch_rotation);
+    }
+    if (yaw_rotation != 0.0F) {
+      camera.AddYaw(yaw_rotation);
+    }
+  };
+
+  const auto get_delta = []() -> double {
+    const double current_time = glfwGetTime();
+    static double last_time = current_time;
+    const double delta_time = current_time - last_time;
+    last_time = current_time;
+    return delta_time;
+  };
+
   auto view_matrix = glm::mat4(1.0f);
   view_matrix = glm::translate(view_matrix, glm::vec3(0.0F, 0.0F, 0.0F));
   if (const auto res = program->get()->SetMat4("view", view_matrix); !res) {
@@ -109,17 +173,25 @@ auto main() -> int {
     glfwTerminate();
     return 1;
   }
-  const auto projection_matrix =
-      glm::ortho(-1.0F, 1.0F, -1.0F, 1.0F, -1.0F, 1.0F);
+
+  int width;
+  int height;
+  glfwGetWindowSize(window, &width, &height);
+
+  const auto projection_matrix = glm::perspective(
+      glm::radians(45.0F),
+      static_cast<float>(width) / static_cast<float>(height), 0.1F, 1000.0F);
 
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   while (!glfwWindowShouldClose(window)) {
+    const auto delta_time = static_cast<float>(get_delta());
+    handle_input(delta_time);
     glClear(GL_COLOR_BUFFER_BIT);
 
     constexpr auto triangle_model_matrix = glm::mat4(1.0f);
-    if (const auto res =
-            renderer->get()->Draw(**program, **triangle_mesh, projection_matrix,
-                                  triangle_model_matrix);
+    if (const auto res = renderer->get()->Draw(
+            **program, **triangle_mesh, projection_matrix,
+            camera.GetViewMatrix(), triangle_model_matrix);
         !res) {
       std::println(std::cerr, "Could not draw mesh: {}", res.error().message);
       glfwTerminate();
