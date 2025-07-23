@@ -3,6 +3,6 @@
 #include "frengine/renderer.h"
 
 auto main() -> int {
-  std::println("{}", Renderer::GetHelloWorld());
+  std::println("{}", frengine::Renderer::GetHelloWorld());
   return 0;
 }
