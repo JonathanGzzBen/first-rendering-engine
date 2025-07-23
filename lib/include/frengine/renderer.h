@@ -2,26 +2,22 @@
 #define RENDERER_H
 
 #include <expected>
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
 #include <string>
 
 #include "error.h"
-
-struct Vertex {
-  glm::vec3 position;
-  glm::vec3 normal;
-  glm::vec2 uv;
-};
+#include "mesh.h"
 
 namespace frengine {
 class Renderer {
  private:
-  explicit Renderer(unsigned int vao);
+  unsigned int vao_;
 
  public:
-  static auto GetHelloWorld() -> std::string { return "Hello World"; }
-  static auto Create() -> std::expected<Renderer, Error> {
+  explicit Renderer(const unsigned int vao) : vao_(vao) {}
+
+  ~Renderer() { glDeleteVertexArrays(1, &vao_); }
+
+  static auto Create() -> std::expected<std::unique_ptr<Renderer>, Error> {
     unsigned int vao;
     glCreateVertexArrays(1, &vao);
 
@@ -44,7 +40,24 @@ class Renderer {
     glVertexArrayAttribFormat(vao, 2, 2, GL_FLOAT, GL_FALSE,
                               offsetof(Vertex, uv));
 
-    return Renderer(vao);
+    return std::make_unique<Renderer>(vao);
+  }
+
+  auto Draw(const Program& program, const Mesh& mesh,
+            const glm::mat4& model_matrix = glm::mat4(1.0F)) const
+      -> std::expected<void, Error> {
+    if (const auto res = program.SetMat4("model", model_matrix); !res) {
+      return std::unexpected(Error{.message = "Could not set model matrix"});
+    }
+
+    program.Use();
+    glBindVertexArray(vao_);
+    glVertexArrayVertexBuffer(vao_, 0, mesh.vbo(), 0, sizeof(Vertex));
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.ebo());
+    glDrawElements(GL_TRIANGLES, static_cast<int>(mesh.indices_count()),
+                   GL_UNSIGNED_INT, nullptr);
+    glUseProgram(0);
+    return {};
   }
 };
 

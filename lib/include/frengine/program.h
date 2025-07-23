@@ -2,6 +2,7 @@
 #define PROGRAM_H
 #include <expected>
 #include <fstream>
+#include <glm/mat4x4.hpp>
 #include <sstream>
 
 #include "error.h"
@@ -107,6 +108,22 @@ class Program {
     }
 
     return std::make_unique<Program>(program, *vertex_shader, *fragment_shader);
+  }
+
+  auto Use() const -> void { glUseProgram(program_); }
+
+  auto SetMat4(const std::string& uniform_name, const glm::mat4& mat) const
+      -> std::expected<void, Error> {
+    glUseProgram(program_);
+    const auto location = glGetUniformLocation(program_, uniform_name.c_str());
+    if (location == -1) {
+      return std::unexpected(
+          Error{.message = std::format("Could not get uniform location of '{}'",
+                                       location)});
+    }
+    glUniformMatrix4fv(location, 1, GL_FALSE, &mat[0][0]);
+    glUseProgram(0);
+    return {};
   }
 };
 
