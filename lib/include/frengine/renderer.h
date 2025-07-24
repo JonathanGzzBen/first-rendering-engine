@@ -63,10 +63,7 @@ class Renderer {
 
     program.Use();
     glBindVertexArray(vao_);
-    glVertexArrayVertexBuffer(vao_, 0, mesh.vbo(), 0, sizeof(Vertex));
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.ebo());
-    glDrawElements(GL_TRIANGLES, static_cast<int>(mesh.indices_count()),
-                   GL_UNSIGNED_INT, nullptr);
+    mesh.Draw(program, vao_);
     glUseProgram(0);
     return {};
   }
@@ -88,22 +85,10 @@ class Renderer {
       return std::unexpected(Error{.message = "Could not set model matrix"});
     }
 
+    program.Use();
     glBindVertexArray(vao_);
-    for (auto& mesh : model.meshes()) {
-      unsigned int texture_unit = 0;
-      program.Set1i("sTexture", texture_unit);
-      program.Use();
-      if (!mesh->textures().empty()) {
-        mesh->textures()[0].Bind(texture_unit);
-      }
-
-      glVertexArrayVertexBuffer(vao_, 0, mesh->vbo(), 0, sizeof(Vertex));
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo());
-      glDrawElements(GL_TRIANGLES, static_cast<int>(mesh->indices_count()),
-                     GL_UNSIGNED_INT, nullptr);
-    }
-    glUseProgram(0);
-    return {};
+    model.Draw(program, vao_);
+    glBindVertexArray(0);
   }
 };
 

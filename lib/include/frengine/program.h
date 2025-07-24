@@ -122,7 +122,6 @@ class Program {
                                        uniform_name)});
     }
     glUniformMatrix4fv(location, 1, GL_FALSE, &mat[0][0]);
-    glUseProgram(0);
     return {};
   }
 
@@ -136,7 +135,6 @@ class Program {
                                        uniform_name)});
     }
     glUniform1i(location, value);
-    glUseProgram(0);
     return {};
   }
 };

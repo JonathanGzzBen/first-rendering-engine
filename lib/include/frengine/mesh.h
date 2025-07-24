@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "error.h"
+#include "renderable.h"
 #include "texture.h"
 
 struct Vertex {
@@ -19,7 +20,7 @@ struct Vertex {
 };
 
 namespace frengine {
-class Mesh {
+class Mesh : public IRenderable {
  private:
   unsigned int vbo_;
   unsigned int ebo_;
@@ -38,7 +39,7 @@ class Mesh {
         indices_count_(indices_count_),
         textures_(textures) {}
 
-  ~Mesh() {
+  ~Mesh() override {
     glDeleteBuffers(1, &vbo_);
     glDeleteBuffers(1, &ebo_);
   }
@@ -85,6 +86,22 @@ class Mesh {
   }
   [[nodiscard]] auto textures() const -> std::vector<Texture> {
     return textures_;
+  }
+
+  // IRenderable
+  auto Draw(const Program& program, const unsigned int vao) const
+      -> void override {
+    unsigned int texture_unit = 0;
+    program.Set1i("sTexture", texture_unit);
+    if (!textures_.empty()) {
+      textures_[0].Bind(texture_unit);
+    }
+
+    glVertexArrayVertexBuffer(vao, 0, vbo_, 0, sizeof(Vertex));
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_);
+
+    glDrawElements(GL_TRIANGLES, static_cast<int>(indices_count_),
+                   GL_UNSIGNED_INT, nullptr);
   }
 };
 
