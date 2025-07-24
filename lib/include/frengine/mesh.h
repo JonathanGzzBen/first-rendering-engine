@@ -47,7 +47,8 @@ class Mesh {
     glNamedBufferStorage(ebo, indices.size() * sizeof(unsigned int),
                          indices.data(), 0);
 
-    return std::make_unique<Mesh>(vbo, ebo, indices.size());
+    return std::make_unique<Mesh>(vbo, ebo,
+                                  static_cast<unsigned int>(indices.size()));
   }
 
   [[nodiscard]] auto vbo() const -> unsigned int { return vbo_; }

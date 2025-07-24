@@ -6,6 +6,7 @@
 #include <print>
 
 #include "frengine/camera.h"
+#include "frengine/model.h"
 #include "frengine/program.h"
 #include "frengine/renderer.h"
 
@@ -174,6 +175,14 @@ auto main() -> int {
     return 1;
   }
 
+  const auto cube_model = frengine::Model::Create("models/cube/cube.obj");
+  if (!cube_model) {
+    std::println(std::cerr, "Could not create cube model: {}",
+                 cube_model.error().message);
+    glfwTerminate();
+    return 1;
+  }
+
   int width;
   int height;
   glfwGetWindowSize(window, &width, &height);
@@ -188,12 +197,26 @@ auto main() -> int {
     handle_input(delta_time);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    constexpr auto triangle_model_matrix = glm::mat4(1.0f);
+    auto triangle_model_matrix = glm::mat4(1.0f);
+    triangle_model_matrix =
+        glm::translate(triangle_model_matrix, glm::vec3(-1.0F, 0.0F, 0.0F));
     if (const auto res = renderer->get()->Draw(
             **program, **triangle_mesh, projection_matrix,
             camera.GetViewMatrix(), triangle_model_matrix);
         !res) {
       std::println(std::cerr, "Could not draw mesh: {}", res.error().message);
+      glfwTerminate();
+      return 1;
+    }
+
+    auto cube_model_matrix = glm::mat4(1.0f);
+    cube_model_matrix =
+        glm::translate(cube_model_matrix, glm::vec3(1.0F, 0.0F, 0.0F));
+    if (const auto res =
+            renderer->get()->Draw(**program, **cube_model, projection_matrix,
+                                  camera.GetViewMatrix(), cube_model_matrix);
+        !res) {
+      std::println(std::cerr, "Could not draw model: {}", res.error().message);
       glfwTerminate();
       return 1;
     }
