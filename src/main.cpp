@@ -194,8 +194,8 @@ auto main() -> int {
     return 1;
   }
 
-  const auto daiwa_texture =
-      frengine::Texture::Create("textures/daiwa_scarlet.jpeg");
+  const auto daiwa_texture = frengine::Texture::Create(
+      "textures/daiwa_scarlet.jpeg", frengine::Texture::Type::Diffuse);
   if (!daiwa_texture) {
     std::println(std::cerr, "Could not create texture texture: {}",
                  daiwa_texture.error().message);

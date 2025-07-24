@@ -91,10 +91,16 @@ class Mesh : public IRenderable {
   // IRenderable
   auto Draw(const Program& program, const unsigned int vao) const
       -> void override {
-    unsigned int texture_unit = 0;
-    program.Set1i("sTexture", texture_unit);
-    if (!textures_.empty()) {
-      textures_[0].Bind(texture_unit);
+    size_t diffuse_num = 1;
+    for (size_t i = 0; i < textures_.size(); ++i) {
+      textures_.at(i).Bind(i);
+
+      std::string uniform_name{};
+      if (textures_.at(i).Type() == Texture::Type::Diffuse) {
+        uniform_name = "texture_diffuse_" + std::to_string(diffuse_num);
+      }
+
+      program.Set1i(uniform_name, i);
     }
 
     glVertexArrayVertexBuffer(vao, 0, vbo_, 0, sizeof(Vertex));
