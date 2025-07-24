@@ -9,6 +9,7 @@
 #include "frengine/model.h"
 #include "frengine/program.h"
 #include "frengine/renderer.h"
+#include "frengine/texture.h"
 
 auto glfw_error_callback(int error, const char *description) -> void {
   std::println(std::cerr, "GLFW error {}: {}", error, description);
@@ -65,11 +66,20 @@ auto main() -> int {
     }
   }();
 
-  const auto program =
+  const auto white_color_program =
       frengine::Program::Create("shaders/vertex.glsl", "shaders/fragment.glsl");
-  if (!program) {
+  if (!white_color_program) {
     std::println(std::cerr, "Could not create program: {}",
-                 program.error().message);
+                 white_color_program.error().message);
+    glfwTerminate();
+    return 1;
+  }
+
+  const auto texture_program = frengine::Program::Create(
+      "shaders/vertex.glsl", "shaders/fragment_texture.glsl");
+  if (!texture_program) {
+    std::println(std::cerr, "Could not create program: {}",
+                 texture_program.error().message);
     glfwTerminate();
     return 1;
   }
@@ -88,10 +98,10 @@ auto main() -> int {
                                   .uv = glm::vec2(0.0F, 0.0F)},
                            Vertex{.position = glm::vec3(0.0F, 1.0F, 0.0F),
                                   .normal = glm::vec3(1.0F, 1.0F, 1.0F),
-                                  .uv = glm::vec2(0.0F, 0.0F)},
+                                  .uv = glm::vec2(0.5F, 1.0F)},
                            Vertex{.position = glm::vec3(1.0F, -1.0F, 0.0F),
                                   .normal = glm::vec3(1.0F, 1.0F, 1.0F),
-                                  .uv = glm::vec2(0.0F, 0.0F)}});
+                                  .uv = glm::vec2(1.0F, 0.0F)}});
   const auto triangle_indices = std::vector<unsigned int>({0, 1, 2});
 
   const auto triangle_mesh =
@@ -168,7 +178,8 @@ auto main() -> int {
 
   auto view_matrix = glm::mat4(1.0f);
   view_matrix = glm::translate(view_matrix, glm::vec3(0.0F, 0.0F, 0.0F));
-  if (const auto res = program->get()->SetMat4("view", view_matrix); !res) {
+  if (const auto res = white_color_program->get()->SetMat4("view", view_matrix);
+      !res) {
     std::println(std::cerr, "Could not set view matrix: {}",
                  res.error().message);
     glfwTerminate();
@@ -182,6 +193,19 @@ auto main() -> int {
     glfwTerminate();
     return 1;
   }
+
+  const auto daiwa_texture =
+      frengine::Texture::Create("textures/daiwa_scarlet.jpeg");
+  if (!daiwa_texture) {
+    std::println(std::cerr, "Could not create texture texture: {}",
+                 daiwa_texture.error().message);
+    glfwTerminate();
+    return 1;
+  }
+
+  int texture_unit_daiwa = 0;
+  texture_program->get()->Set1i("sTexture", texture_unit_daiwa);
+  daiwa_texture->Bind(texture_unit_daiwa);
 
   int width;
   int height;
@@ -201,7 +225,7 @@ auto main() -> int {
     triangle_model_matrix =
         glm::translate(triangle_model_matrix, glm::vec3(-1.0F, 0.0F, 0.0F));
     if (const auto res = renderer->get()->Draw(
-            **program, **triangle_mesh, projection_matrix,
+            **texture_program, **triangle_mesh, projection_matrix,
             camera.GetViewMatrix(), triangle_model_matrix);
         !res) {
       std::println(std::cerr, "Could not draw mesh: {}", res.error().message);
@@ -212,9 +236,9 @@ auto main() -> int {
     auto cube_model_matrix = glm::mat4(1.0f);
     cube_model_matrix =
         glm::translate(cube_model_matrix, glm::vec3(1.0F, 0.0F, 0.0F));
-    if (const auto res =
-            renderer->get()->Draw(**program, **cube_model, projection_matrix,
-                                  camera.GetViewMatrix(), cube_model_matrix);
+    if (const auto res = renderer->get()->Draw(
+            **white_color_program, **cube_model, projection_matrix,
+            camera.GetViewMatrix(), cube_model_matrix);
         !res) {
       std::println(std::cerr, "Could not draw model: {}", res.error().message);
       glfwTerminate();

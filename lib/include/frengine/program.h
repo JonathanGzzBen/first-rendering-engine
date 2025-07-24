@@ -125,6 +125,20 @@ class Program {
     glUseProgram(0);
     return {};
   }
+
+  auto Set1i(const std::string& uniform_name, const int value) const
+      -> std::expected<void, Error> {
+    glUseProgram(program_);
+    const auto location = glGetUniformLocation(program_, uniform_name.c_str());
+    if (location == -1) {
+      return std::unexpected(
+          Error{.message = std::format("Could not get uniform location of '{}'",
+                                       uniform_name)});
+    }
+    glUniform1i(location, value);
+    glUseProgram(0);
+    return {};
+  }
 };
 
 }  // namespace frengine
