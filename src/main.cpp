@@ -66,15 +66,6 @@ auto main() -> int {
     }
   }();
 
-  const auto white_color_program =
-      frengine::Program::Create("shaders/vertex.glsl", "shaders/fragment.glsl");
-  if (!white_color_program) {
-    std::println(std::cerr, "Could not create program: {}",
-                 white_color_program.error().message);
-    glfwTerminate();
-    return 1;
-  }
-
   const auto texture_program = frengine::Program::Create(
       "shaders/vertex.glsl", "shaders/fragment_texture.glsl");
   if (!texture_program) {
@@ -178,13 +169,6 @@ auto main() -> int {
 
   auto view_matrix = glm::mat4(1.0f);
   view_matrix = glm::translate(view_matrix, glm::vec3(0.0F, 0.0F, 0.0F));
-  if (const auto res = white_color_program->get()->SetMat4("view", view_matrix);
-      !res) {
-    std::println(std::cerr, "Could not set view matrix: {}",
-                 res.error().message);
-    glfwTerminate();
-    return 1;
-  }
 
   const auto cube_model = frengine::Model::Create("models/cube/cube.obj");
   if (!cube_model) {
@@ -211,6 +195,10 @@ auto main() -> int {
       glm::radians(45.0F),
       static_cast<float>(width) / static_cast<float>(height), 0.1F, 1000.0F);
 
+  frengine::Scene scene;
+  scene.AddRenderable(*triangle_mesh);
+  scene.AddRenderable(*cube_model);
+
   glEnable(GL_DEPTH_TEST);
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   while (!glfwWindowShouldClose(window)) {
@@ -218,33 +206,19 @@ auto main() -> int {
     handle_input(delta_time);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    unsigned int texture_unit = 0;
-    texture_program->get()->Set1i("sTexture", texture_unit);
-    daiwa_texture->Bind(texture_unit);
-
+    daiwa_texture->Bind(0); // Workaround to draw triangle with texture
     auto triangle_model_matrix = glm::mat4(1.0f);
     triangle_model_matrix =
         glm::translate(triangle_model_matrix, glm::vec3(-1.0F, 0.0F, 0.0F));
-    if (const auto res = renderer->get()->Draw(
-            **texture_program, **triangle_mesh, projection_matrix,
-            camera.GetViewMatrix(), triangle_model_matrix);
+
+    if (const auto res =
+            texture_program->get()->SetMat4("model", triangle_model_matrix);
         !res) {
-      std::println(std::cerr, "Could not draw mesh: {}", res.error().message);
-      glfwTerminate();
       return 1;
     }
 
-    auto cube_model_matrix = glm::mat4(1.0f);
-    cube_model_matrix =
-        glm::translate(cube_model_matrix, glm::vec3(1.0F, 0.0F, 0.0F));
-    if (const auto res = renderer->get()->Draw(
-            **texture_program, **cube_model, projection_matrix,
-            camera.GetViewMatrix(), cube_model_matrix);
-        !res) {
-      std::println(std::cerr, "Could not draw model: {}", res.error().message);
-      glfwTerminate();
-      return 1;
-    }
+    renderer->get()->RenderScene(scene, **texture_program, projection_matrix,
+                                 camera.GetViewMatrix());
 
     glfwSwapBuffers(window);
     glfwPollEvents();

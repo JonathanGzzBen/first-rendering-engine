@@ -7,6 +7,7 @@
 #include "mesh.h"
 #include "model.h"
 #include "program.h"
+#include "scene.h"
 
 namespace frengine {
 class Renderer {
@@ -89,6 +90,27 @@ class Renderer {
     glBindVertexArray(vao_);
     model.Draw(program, vao_);
     glBindVertexArray(0);
+  }
+
+  auto RenderScene(const Scene& scene, const Program& program,
+                   const glm::mat4& projection, const glm::mat4 view) const -> std::expected<void, Error> {
+    program.Use();
+    if (const auto res = program.SetMat4("projection", projection); !res) {
+      return std::unexpected(
+          Error{.message = std::format("Could not set projection matrix: {}",
+                                       res.error().message)});
+    }
+    if (const auto res = program.SetMat4("view", view); !res) {
+      return std::unexpected(Error{.message = "Could not set view matrix"});
+    }
+
+    glBindVertexArray(vao_);
+    for (const auto& renderable : scene.GetRenderables()) {
+      renderable->Draw(program, vao_);
+    }
+    glBindVertexArray(0);
+    // glUseProgram(0);
+    return {};
   }
 };
 

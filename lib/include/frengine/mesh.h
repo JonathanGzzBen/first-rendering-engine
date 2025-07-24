@@ -46,7 +46,7 @@ class Mesh : public IRenderable {
 
   static auto Create(const std::vector<Vertex>& vertices,
                      const std::vector<unsigned int>& indices)
-      -> std::expected<std::unique_ptr<Mesh>, Error> {
+      -> std::expected<std::shared_ptr<Mesh>, Error> {
     unsigned int vbo;
     glCreateBuffers(1, &vbo);
     glNamedBufferStorage(vbo, vertices.size() * sizeof(Vertex), vertices.data(),
@@ -57,7 +57,7 @@ class Mesh : public IRenderable {
     glNamedBufferStorage(ebo, indices.size() * sizeof(unsigned int),
                          indices.data(), 0);
 
-    return std::make_unique<Mesh>(vbo, ebo,
+    return std::make_shared<Mesh>(vbo, ebo,
                                   static_cast<unsigned int>(indices.size()));
   }
 
