@@ -17,6 +17,7 @@ build/
 *.lo
 *.o
 *.obj
+!/models/**/*.obj
 
 # Precompiled Headers
 *.gch

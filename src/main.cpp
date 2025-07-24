@@ -203,10 +203,6 @@ auto main() -> int {
     return 1;
   }
 
-  int texture_unit_daiwa = 0;
-  texture_program->get()->Set1i("sTexture", texture_unit_daiwa);
-  daiwa_texture->Bind(texture_unit_daiwa);
-
   int width;
   int height;
   glfwGetWindowSize(window, &width, &height);
@@ -215,11 +211,16 @@ auto main() -> int {
       glm::radians(45.0F),
       static_cast<float>(width) / static_cast<float>(height), 0.1F, 1000.0F);
 
+  glEnable(GL_DEPTH_TEST);
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   while (!glfwWindowShouldClose(window)) {
     const auto delta_time = static_cast<float>(get_delta());
     handle_input(delta_time);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    unsigned int texture_unit = 0;
+    texture_program->get()->Set1i("sTexture", texture_unit);
+    daiwa_texture->Bind(texture_unit);
 
     auto triangle_model_matrix = glm::mat4(1.0f);
     triangle_model_matrix =
@@ -237,7 +238,7 @@ auto main() -> int {
     cube_model_matrix =
         glm::translate(cube_model_matrix, glm::vec3(1.0F, 0.0F, 0.0F));
     if (const auto res = renderer->get()->Draw(
-            **white_color_program, **cube_model, projection_matrix,
+            **texture_program, **cube_model, projection_matrix,
             camera.GetViewMatrix(), cube_model_matrix);
         !res) {
       std::println(std::cerr, "Could not draw model: {}", res.error().message);
