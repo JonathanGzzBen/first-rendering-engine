@@ -26,6 +26,7 @@ class Mesh : public IRenderable {
   unsigned int ebo_;
   unsigned int indices_count_;
   std::vector<Texture> textures_;
+  glm::mat4 model_matrix_ = glm::mat4(1.0F);
 
  public:
   Mesh(const unsigned int vbo, const unsigned int ebo,
@@ -88,9 +89,18 @@ class Mesh : public IRenderable {
     return textures_;
   }
 
+  auto add_texture(const Texture& texture) -> void {
+    textures_.emplace_back(texture);
+  }
+
   // IRenderable
   auto Draw(const Program& program, const unsigned int vao) const
       -> void override {
+    if (model_matrix_ != glm::mat4(1.0F)) {
+      program.SetMat4("model", model_matrix_);
+    }
+
+    // Textures
     size_t diffuse_num = 1;
     for (size_t i = 0; i < textures_.size(); ++i) {
       textures_.at(i).Bind(i);
@@ -109,6 +119,11 @@ class Mesh : public IRenderable {
     glDrawElements(GL_TRIANGLES, static_cast<int>(indices_count_),
                    GL_UNSIGNED_INT, nullptr);
   }
+
+  void SetModelMatrix(const glm::mat4& model) override {
+    model_matrix_ = model;
+  }
+  const glm::mat4& GetModelMatrix() const override { return model_matrix_; }
 };
 
 }  // namespace frengine

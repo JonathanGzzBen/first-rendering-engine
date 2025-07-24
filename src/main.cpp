@@ -23,6 +23,39 @@ void APIENTRY glDebugCallback(GLenum source, GLenum type, GLuint id,
   }
 }
 
+auto get_daiwa_test_triangle()
+    -> std::expected<std::shared_ptr<frengine::Mesh>, frengine::Error> {
+  const auto triangle_vertices =
+      std::vector<Vertex>({Vertex{.position = glm::vec3(-1.0F, -1.0F, 0.0F),
+                                  .normal = glm::vec3(1.0F, 1.0F, 1.0F),
+                                  .uv = glm::vec2(0.0F, 0.0F)},
+                           Vertex{.position = glm::vec3(0.0F, 1.0F, 0.0F),
+                                  .normal = glm::vec3(1.0F, 1.0F, 1.0F),
+                                  .uv = glm::vec2(0.5F, 1.0F)},
+                           Vertex{.position = glm::vec3(1.0F, -1.0F, 0.0F),
+                                  .normal = glm::vec3(1.0F, 1.0F, 1.0F),
+                                  .uv = glm::vec2(1.0F, 0.0F)}});
+  const auto triangle_indices = std::vector<unsigned int>({0, 1, 2});
+
+  auto triangle_mesh =
+      frengine::Mesh::Create(triangle_vertices, triangle_indices);
+  if (!triangle_mesh) {
+    return std::unexpected(
+        frengine::Error{.message = std::format("Could not create mesh: {}",
+                                               triangle_mesh.error().message)});
+  }
+  const auto daiwa_texture = frengine::Texture::Create(
+      "textures/daiwa_scarlet.jpeg", frengine::Texture::Type::Diffuse);
+  if (!daiwa_texture) {
+    return std::unexpected(frengine::Error{
+        .message = std::format("Could not create texture texture: {}",
+                               daiwa_texture.error().message)});
+  }
+
+  triangle_mesh->get()->add_texture(*daiwa_texture);
+  return triangle_mesh;
+}
+
 auto main() -> int {
   if (glfwInit() != GLFW_TRUE) {
     std::println(std::cerr, "Could not initialize glfw");
@@ -79,27 +112,6 @@ auto main() -> int {
   if (!renderer) {
     std::println(std::cerr, "Could not create renderer: {}",
                  renderer.error().message);
-    glfwTerminate();
-    return 1;
-  }
-
-  const auto triangle_vertices =
-      std::vector<Vertex>({Vertex{.position = glm::vec3(-1.0F, -1.0F, 0.0F),
-                                  .normal = glm::vec3(1.0F, 1.0F, 1.0F),
-                                  .uv = glm::vec2(0.0F, 0.0F)},
-                           Vertex{.position = glm::vec3(0.0F, 1.0F, 0.0F),
-                                  .normal = glm::vec3(1.0F, 1.0F, 1.0F),
-                                  .uv = glm::vec2(0.5F, 1.0F)},
-                           Vertex{.position = glm::vec3(1.0F, -1.0F, 0.0F),
-                                  .normal = glm::vec3(1.0F, 1.0F, 1.0F),
-                                  .uv = glm::vec2(1.0F, 0.0F)}});
-  const auto triangle_indices = std::vector<unsigned int>({0, 1, 2});
-
-  const auto triangle_mesh =
-      frengine::Mesh::Create(triangle_vertices, triangle_indices);
-  if (!triangle_mesh) {
-    std::println(std::cerr, "Could not create mesh: {}",
-                 triangle_mesh.error().message);
     glfwTerminate();
     return 1;
   }
@@ -167,22 +179,10 @@ auto main() -> int {
     return delta_time;
   };
 
-  auto view_matrix = glm::mat4(1.0f);
-  view_matrix = glm::translate(view_matrix, glm::vec3(0.0F, 0.0F, 0.0F));
-
   const auto cube_model = frengine::Model::Create("models/cube/cube.obj");
   if (!cube_model) {
     std::println(std::cerr, "Could not create cube model: {}",
                  cube_model.error().message);
-    glfwTerminate();
-    return 1;
-  }
-
-  const auto daiwa_texture = frengine::Texture::Create(
-      "textures/daiwa_scarlet.jpeg", frengine::Texture::Type::Diffuse);
-  if (!daiwa_texture) {
-    std::println(std::cerr, "Could not create texture texture: {}",
-                 daiwa_texture.error().message);
     glfwTerminate();
     return 1;
   }
@@ -195,9 +195,15 @@ auto main() -> int {
       glm::radians(45.0F),
       static_cast<float>(width) / static_cast<float>(height), 0.1F, 1000.0F);
 
+  const auto triangle_mesh = get_daiwa_test_triangle();
+
   frengine::Scene scene;
   scene.AddRenderable(*triangle_mesh);
   scene.AddRenderable(*cube_model);
+  triangle_mesh->get()->SetModelMatrix(
+      glm::translate(glm::mat4(1.0F), glm::vec3(-1.0F, 0.0F, 0.0F)));
+  cube_model->get()->SetModelMatrix(
+      glm::translate(glm::mat4(1.0F), glm::vec3(1.0F, 0.0F, 0.0F)));
 
   glEnable(GL_DEPTH_TEST);
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -205,17 +211,6 @@ auto main() -> int {
     const auto delta_time = static_cast<float>(get_delta());
     handle_input(delta_time);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    daiwa_texture->Bind(0); // Workaround to draw triangle with texture
-    auto triangle_model_matrix = glm::mat4(1.0f);
-    triangle_model_matrix =
-        glm::translate(triangle_model_matrix, glm::vec3(-1.0F, 0.0F, 0.0F));
-
-    if (const auto res =
-            texture_program->get()->SetMat4("model", triangle_model_matrix);
-        !res) {
-      return 1;
-    }
 
     renderer->get()->RenderScene(scene, **texture_program, projection_matrix,
                                  camera.GetViewMatrix());
