@@ -214,8 +214,15 @@ auto main() -> int {
     handle_input(delta_time);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    renderer->get()->RenderScene(scene, **texture_program, projection_matrix,
-                                 camera.GetViewMatrix());
+    if (const auto res = renderer->get()->RenderScene(scene, **texture_program,
+                                                      projection_matrix,
+                                                      camera.GetViewMatrix());
+        !res) {
+      std::println(std::cerr, "Could not render scene: {}",
+                   res.error().message);
+      glfwTerminate();
+      return 1;
+    }
 
     glfwSwapBuffers(window);
     glfwPollEvents();
