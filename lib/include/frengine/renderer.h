@@ -45,55 +45,8 @@ class Renderer {
     return std::make_unique<Renderer>(vao);
   }
 
-  auto Draw(const Program& program, const Mesh& mesh,
-            const glm::mat4& projection_matrix, const glm::mat4& view_matrix,
-            const glm::mat4& model_matrix) const -> std::expected<void, Error> {
-    if (const auto res = program.SetMat4("projection", projection_matrix);
-        !res) {
-      return std::unexpected(
-          Error{.message = std::format("Could not set projection matrix: {}",
-                                       res.error().message)});
-    }
-    if (const auto res = program.SetMat4("view", view_matrix); !res) {
-      return std::unexpected(Error{.message = "Could not set view matrix"});
-    }
-
-    if (const auto res = program.SetMat4("model", model_matrix); !res) {
-      return std::unexpected(Error{.message = "Could not set model matrix"});
-    }
-
-    program.Use();
-    glBindVertexArray(vao_);
-    mesh.Draw(program, vao_);
-    glUseProgram(0);
-    return {};
-  }
-
-  auto Draw(const Program& program, const Model& model,
-            const glm::mat4& projection_matrix, const glm::mat4& view_matrix,
-            const glm::mat4& model_matrix) const -> std::expected<void, Error> {
-    if (const auto res = program.SetMat4("projection", projection_matrix);
-        !res) {
-      return std::unexpected(
-          Error{.message = std::format("Could not set projection matrix: {}",
-                                       res.error().message)});
-    }
-    if (const auto res = program.SetMat4("view", view_matrix); !res) {
-      return std::unexpected(Error{.message = "Could not set view matrix"});
-    }
-
-    if (const auto res = program.SetMat4("model", model_matrix); !res) {
-      return std::unexpected(Error{.message = "Could not set model matrix"});
-    }
-
-    program.Use();
-    glBindVertexArray(vao_);
-    model.Draw(program, vao_);
-    glBindVertexArray(0);
-  }
-
   auto RenderScene(const Scene& scene, const Program& program,
-                   const glm::mat4& projection, const glm::mat4 view) const
+                   const glm::mat4& projection, const glm::mat4& view) const
       -> std::expected<void, Error> {
     program.Use();
     if (const auto res = program.SetMat4("projection", projection); !res) {
