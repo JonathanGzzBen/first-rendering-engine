@@ -179,14 +179,6 @@ auto main() -> int {
     return delta_time;
   };
 
-  const auto cube_model = frengine::Model::Create("models/cube/cube.obj");
-  if (!cube_model) {
-    std::println(std::cerr, "Could not create cube model: {}",
-                 cube_model.error().message);
-    glfwTerminate();
-    return 1;
-  }
-
   int width;
   int height;
   glfwGetWindowSize(window, &width, &height);
@@ -197,13 +189,23 @@ auto main() -> int {
 
   const auto triangle_mesh = get_daiwa_test_triangle();
 
+  const auto cube_model = frengine::Model::Create("models/cube/cube.obj");
+  if (!cube_model) {
+    std::println(std::cerr, "Could not create cube model: {}",
+                 cube_model.error().message);
+    glfwTerminate();
+    return 1;
+  }
+
   frengine::Scene scene;
-  scene.AddRenderable(*triangle_mesh);
-  scene.AddRenderable(*cube_model);
-  triangle_mesh->get()->SetModelMatrix(
-      glm::translate(glm::mat4(1.0F), glm::vec3(-1.0F, 0.0F, 0.0F)));
-  cube_model->get()->SetModelMatrix(
-      glm::translate(glm::mat4(1.0F), glm::vec3(1.0F, 0.0F, 0.0F)));
+  scene.AddInstance(frengine::Instance{
+      .renderable = *triangle_mesh,
+      .transform =
+          glm::translate(glm::mat4(1.0F), glm::vec3(-1.0F, 0.0F, 0.0F))});
+  scene.AddInstance(frengine::Instance{
+      .renderable = *cube_model,
+      .transform =
+          glm::translate(glm::mat4(1.0F), glm::vec3(1.0F, 0.0F, 0.0F))});
 
   glEnable(GL_DEPTH_TEST);
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);

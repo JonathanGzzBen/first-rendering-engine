@@ -7,16 +7,21 @@
 
 namespace frengine {
 
+struct Instance {
+  std::shared_ptr<IRenderable> renderable;
+  glm::mat4 transform;
+};
+
 class Scene {
  private:
-  std::vector<std::shared_ptr<IRenderable>> renderables_;
+  std::vector<Instance> instances_;
 
  public:
-  auto AddRenderable(std::shared_ptr<IRenderable> renderable) -> void {
-    renderables_.push_back(renderable);
+  auto AddInstance(const Instance& instance) -> void {
+    instances_.emplace_back(instance);
   }
 
-  const auto& GetRenderables() const { return renderables_; }
+  const auto& GetInstances() const { return instances_; }
 };
 
 }  // namespace frengine

@@ -125,18 +125,10 @@ class Model : public IRenderable {
   // IRenderable
   auto Draw(const Program& program, const unsigned int vao) const
       -> void override {
-    // if (model_matrix_ != glm::mat4(1.0F)) {
-    program.SetMat4("model", model_matrix_);
-    // }
     for (const auto& mesh : meshes_) {
       mesh->Draw(program, vao);
     }
   }
-
-  void SetModelMatrix(const glm::mat4& model) override {
-    model_matrix_ = model;
-  }
-  const glm::mat4& GetModelMatrix() const override { return model_matrix_; }
 };
 
 }  // namespace frengine

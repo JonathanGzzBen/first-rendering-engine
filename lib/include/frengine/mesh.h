@@ -96,10 +96,6 @@ class Mesh : public IRenderable {
   // IRenderable
   auto Draw(const Program& program, const unsigned int vao) const
       -> void override {
-    if (model_matrix_ != glm::mat4(1.0F)) {
-      program.SetMat4("model", model_matrix_);
-    }
-
     // Textures
     size_t diffuse_num = 1;
     for (size_t i = 0; i < textures_.size(); ++i) {
@@ -119,11 +115,6 @@ class Mesh : public IRenderable {
     glDrawElements(GL_TRIANGLES, static_cast<int>(indices_count_),
                    GL_UNSIGNED_INT, nullptr);
   }
-
-  void SetModelMatrix(const glm::mat4& model) override {
-    model_matrix_ = model;
-  }
-  const glm::mat4& GetModelMatrix() const override { return model_matrix_; }
 };
 
 }  // namespace frengine

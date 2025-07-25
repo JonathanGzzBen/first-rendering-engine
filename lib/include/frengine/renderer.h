@@ -93,7 +93,8 @@ class Renderer {
   }
 
   auto RenderScene(const Scene& scene, const Program& program,
-                   const glm::mat4& projection, const glm::mat4 view) const -> std::expected<void, Error> {
+                   const glm::mat4& projection, const glm::mat4 view) const
+      -> std::expected<void, Error> {
     program.Use();
     if (const auto res = program.SetMat4("projection", projection); !res) {
       return std::unexpected(
@@ -105,11 +106,14 @@ class Renderer {
     }
 
     glBindVertexArray(vao_);
-    for (const auto& renderable : scene.GetRenderables()) {
+    for (const auto& [renderable, transform] : scene.GetInstances()) {
+      if (const auto res = program.SetMat4("model", transform); !res) {
+        return std::unexpected(Error{.message = "Could not set view matrix"});
+      }
       renderable->Draw(program, vao_);
     }
     glBindVertexArray(0);
-    // glUseProgram(0);
+    glUseProgram(0);
     return {};
   }
 };
