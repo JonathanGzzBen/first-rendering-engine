@@ -94,9 +94,7 @@ class Mesh : public IRenderable {
   [[nodiscard]] auto textures() const -> std::vector<Texture> {
     return material_.textures;
   }
-  [[nodiscard]] auto material() -> Material* {
-    return &material_;
-  }
+  [[nodiscard]] auto material() -> Material* { return &material_; }
 
   auto add_texture(const Texture& texture) -> void {
     material_.textures.emplace_back(texture);
@@ -112,26 +110,29 @@ class Mesh : public IRenderable {
 
       std::string uniform_name{};
       if (material_.textures.at(i).Type() == Texture::Type::Diffuse) {
-        uniform_name = "texture_diffuse_" + std::to_string(diffuse_num);
+        uniform_name =
+            "material.texture_diffuse_" + std::to_string(diffuse_num);
       }
 
-      program.Set1i(uniform_name, i);
+      if (const auto res = program.Set1i(uniform_name, i); !res) {
+        std::println(std::cerr, "Could not set {} uniform", uniform_name);
+      }
     }
 
     if (const auto res =
-            program.SetVec3("ambient_color", material_.ambient_color);
+            program.SetVec3("material.ambient_color", material_.ambient_color);
         !res) {
-      std::println(std::cerr, "Could not set ambient_color uniform");
+      std::println(std::cerr, "Could not set material.ambient_color uniform");
     }
     if (const auto res =
-            program.SetVec3("diffuse_color", material_.diffuse_color);
+            program.SetVec3("material.diffuse_color", material_.diffuse_color);
         !res) {
-      std::println(std::cerr, "Could not set diffuse_color uniform");
+      std::println(std::cerr, "Could not set material.diffuse_color uniform");
     }
-    if (const auto res =
-            program.SetVec3("specular_color", material_.specular_color);
+    if (const auto res = program.SetVec3("material.specular_color",
+                                         material_.specular_color);
         !res) {
-      std::println(std::cerr, "Could not set specular_color uniform");
+      std::println(std::cerr, "Could not set material.specular_color uniform");
     }
 
     glVertexArrayVertexBuffer(vao, 0, vbo_, 0, sizeof(Vertex));
