@@ -65,6 +65,29 @@ class Renderer {
       }
       renderable->Draw(program, vao_);
     }
+
+    static constexpr size_t max_point_lights = 100;
+    size_t point_lights_count = 0;
+    for (const auto& light : scene.GetLights()) {
+      if (const auto point_light = dynamic_cast<PointLight*>(light)) {
+        if (max_point_lights <= point_lights_count) {
+          std::println(
+              std::cerr,
+              "Warning: max number of point lights reached. Ignoring light");
+          continue;
+        }
+        if (const auto res = program.SetVec3(
+                std::format("point_light_positions[{}]", point_lights_count),
+                point_light->position());
+            !res) {
+          return std::unexpected(
+              Error{.message = std::format("Could not set point light: {}",
+                                           point_lights_count)});
+        }
+        point_lights_count++;
+      }
+    }
+
     glBindVertexArray(0);
     glUseProgram(0);
     return {};

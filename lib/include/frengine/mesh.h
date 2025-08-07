@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "error.h"
+#include "material.h"
 #include "renderable.h"
 #include "texture.h"
 
@@ -25,20 +26,25 @@ class Mesh : public IRenderable {
   unsigned int vbo_;
   unsigned int ebo_;
   unsigned int indices_count_;
-  std::vector<Texture> textures_;
+  Material material_;
   glm::mat4 model_matrix_ = glm::mat4(1.0F);
 
  public:
   Mesh(const unsigned int vbo, const unsigned int ebo,
        const unsigned int indices_count_)
-      : vbo_(vbo), ebo_(ebo), indices_count_(indices_count_) {}
+      : vbo_(vbo),
+        ebo_(ebo),
+        indices_count_(indices_count_),
+        material_(default_material) {}
 
   Mesh(const unsigned int vbo, const unsigned int ebo,
        const unsigned int indices_count_, const std::vector<Texture>& textures)
       : vbo_(vbo),
         ebo_(ebo),
         indices_count_(indices_count_),
-        textures_(textures) {}
+        material_(default_material) {
+    material_.textures = textures;
+  }
 
   ~Mesh() override {
     glDeleteBuffers(1, &vbo_);
@@ -86,11 +92,14 @@ class Mesh : public IRenderable {
     return indices_count_;
   }
   [[nodiscard]] auto textures() const -> std::vector<Texture> {
-    return textures_;
+    return material_.textures;
+  }
+  [[nodiscard]] auto material() -> Material* {
+    return &material_;
   }
 
   auto add_texture(const Texture& texture) -> void {
-    textures_.emplace_back(texture);
+    material_.textures.emplace_back(texture);
   }
 
   // IRenderable
@@ -98,15 +107,31 @@ class Mesh : public IRenderable {
       -> void override {
     // Textures
     size_t diffuse_num = 1;
-    for (size_t i = 0; i < textures_.size(); ++i) {
-      textures_.at(i).Bind(i);
+    for (size_t i = 0; i < material_.textures.size(); ++i) {
+      material_.textures.at(i).Bind(i);
 
       std::string uniform_name{};
-      if (textures_.at(i).Type() == Texture::Type::Diffuse) {
+      if (material_.textures.at(i).Type() == Texture::Type::Diffuse) {
         uniform_name = "texture_diffuse_" + std::to_string(diffuse_num);
       }
 
       program.Set1i(uniform_name, i);
+    }
+
+    if (const auto res =
+            program.SetVec3("ambient_color", material_.ambient_color);
+        !res) {
+      std::println(std::cerr, "Could not set ambient_color uniform");
+    }
+    if (const auto res =
+            program.SetVec3("diffuse_color", material_.diffuse_color);
+        !res) {
+      std::println(std::cerr, "Could not set diffuse_color uniform");
+    }
+    if (const auto res =
+            program.SetVec3("specular_color", material_.specular_color);
+        !res) {
+      std::println(std::cerr, "Could not set specular_color uniform");
     }
 
     glVertexArrayVertexBuffer(vao, 0, vbo_, 0, sizeof(Vertex));

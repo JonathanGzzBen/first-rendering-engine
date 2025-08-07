@@ -15,13 +15,17 @@ struct Instance {
 class Scene {
  private:
   std::vector<Instance> instances_;
+  std::vector<ILight*> lights_;
 
  public:
   auto AddInstance(const Instance& instance) -> void {
     instances_.emplace_back(instance);
   }
 
-  const auto& GetInstances() const { return instances_; }
+  [[nodiscard]] const auto& GetInstances() const { return instances_; }
+  [[nodiscard]] const auto& GetLights() const { return lights_; }
+
+  auto AddLight(ILight* light) -> void { lights_.emplace_back(light); }
 };
 
 }  // namespace frengine

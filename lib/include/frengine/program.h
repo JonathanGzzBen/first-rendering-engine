@@ -125,6 +125,19 @@ class Program {
     return {};
   }
 
+  auto SetVec3(const std::string& uniform_name, const glm::vec3& vec) const
+      -> std::expected<void, Error> {
+    glUseProgram(program_);
+    const auto location = glGetUniformLocation(program_, uniform_name.c_str());
+    if (location == -1) {
+      return std::unexpected(
+          Error{.message = std::format("Could not get uniform location of '{}'",
+                                       uniform_name)});
+    }
+    glUniform3fv(location, 1, &vec[0]);
+    return {};
+  }
+
   auto Set1i(const std::string& uniform_name, const int value) const
       -> std::expected<void, Error> {
     glUseProgram(program_);

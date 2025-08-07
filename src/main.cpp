@@ -6,6 +6,7 @@
 #include <print>
 
 #include "frengine/camera.h"
+#include "frengine/light.h"
 #include "frengine/model.h"
 #include "frengine/program.h"
 #include "frengine/renderer.h"
@@ -197,6 +198,7 @@ auto main() -> int {
     return 1;
   }
 
+  triangle_mesh->get()->material()->ambient_color = glm::vec3(0.0F, 1.0F, 0.0F);
   frengine::Scene scene;
   scene.AddInstance(frengine::Instance{
       .renderable = *triangle_mesh,
@@ -207,12 +209,24 @@ auto main() -> int {
       .transform =
           glm::translate(glm::mat4(1.0F), glm::vec3(1.0F, 0.0F, 0.0F))});
 
+  auto point_light =
+      frengine::PointLight(glm::vec3(0.0, 0.0, -1.0), glm::vec3(1.0, 1.0, 1.0));
+  scene.AddLight(&point_light);
+
   glEnable(GL_DEPTH_TEST);
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   while (!glfwWindowShouldClose(window)) {
     const auto delta_time = static_cast<float>(get_delta());
     handle_input(delta_time);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    if (const auto res =
+            texture_program->get()->SetVec3("viewPos", camera.Position());
+        !res) {
+      std::println(std::cerr, "Could not set viewPos uniform: {}", "viewPos");
+      glfwTerminate();
+      return 1;
+    }
 
     if (const auto res = renderer->get()->RenderScene(scene, **texture_program,
                                                       projection_matrix,
