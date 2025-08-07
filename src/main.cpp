@@ -199,6 +199,7 @@ auto main() -> int {
   }
 
   triangle_mesh->get()->material()->ambient_color = glm::vec3(0.0F, 1.0F, 0.0F);
+  cube_model->get()->meshes().at(0)->material()->shininess = 32.0F;
   frengine::Scene scene;
   scene.AddInstance(frengine::Instance{
       .renderable = *triangle_mesh,

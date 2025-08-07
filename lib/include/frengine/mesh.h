@@ -134,6 +134,11 @@ class Mesh : public IRenderable {
         !res) {
       std::println(std::cerr, "Could not set material.specular_color uniform");
     }
+    if (const auto res =
+            program.Set1F("material.shininess", material_.shininess);
+        !res) {
+      std::println(std::cerr, "Could not set material.shininess uniform");
+    }
 
     glVertexArrayVertexBuffer(vao, 0, vbo_, 0, sizeof(Vertex));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_);

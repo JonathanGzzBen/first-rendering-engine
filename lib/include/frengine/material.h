@@ -21,7 +21,7 @@ const Material default_material = Material{
   .emission_color = glm::vec3(0.0F, 0.0F, 0.0F),
   .diffuse_color = glm::vec3(0.0F, 0.0F, 1.0F),
   .specular_color= glm::vec3(1.0F, 1.0F, 1.0F),
-  .shininess = 0.0F,
+  .shininess = std::numeric_limits<float>::max(),
   .textures = {}
 };
 

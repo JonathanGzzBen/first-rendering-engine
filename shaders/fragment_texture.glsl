@@ -5,6 +5,7 @@ struct Material {
     vec3 diffuse_color;
     vec3 specular_color;
     sampler2D texture_diffuse_1;
+    float shininess;
 };
 
 const int MAX_NUM_POINT_LIGHTS = 100;
@@ -27,7 +28,7 @@ vec3 ComputePointLight(vec3 light_position, vec3 view_dir) {
 
     vec3 h = normalize(light_dir + view_dir);
     float nDotH = dot(normal, h);
-    vec3 specular = material.specular_color * pow(max(nDotH, 0.0), 32); // TODO: Use specular map
+    vec3 specular = material.specular_color * pow(max(nDotH, 0.0), material.shininess); // TODO: Use specular map
 
     return diffuse + specular;
 }
