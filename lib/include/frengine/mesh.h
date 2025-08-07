@@ -103,41 +103,9 @@ class Mesh : public IRenderable {
   // IRenderable
   auto Draw(const Program& program, const unsigned int vao) const
       -> void override {
-    // Textures
-    size_t diffuse_num = 1;
-    for (size_t i = 0; i < material_.textures.size(); ++i) {
-      material_.textures.at(i).Bind(i);
-
-      std::string uniform_name{};
-      if (material_.textures.at(i).Type() == Texture::Type::Diffuse) {
-        uniform_name =
-            "material.texture_diffuse_" + std::to_string(diffuse_num);
-      }
-
-      if (const auto res = program.Set1i(uniform_name, i); !res) {
-        std::println(std::cerr, "Could not set {} uniform", uniform_name);
-      }
-    }
-
-    if (const auto res =
-            program.SetVec3("material.ambient_color", material_.ambient_color);
-        !res) {
-      std::println(std::cerr, "Could not set material.ambient_color uniform");
-    }
-    if (const auto res =
-            program.SetVec3("material.diffuse_color", material_.diffuse_color);
-        !res) {
-      std::println(std::cerr, "Could not set material.diffuse_color uniform");
-    }
-    if (const auto res = program.SetVec3("material.specular_color",
-                                         material_.specular_color);
-        !res) {
-      std::println(std::cerr, "Could not set material.specular_color uniform");
-    }
-    if (const auto res =
-            program.Set1F("material.shininess", material_.shininess);
-        !res) {
-      std::println(std::cerr, "Could not set material.shininess uniform");
+    if (const auto res = program.SetMaterial("material", material_); !res) {
+      std::println(std::cerr, "Could not set material: {}",
+                   res.error().message);
     }
 
     glVertexArrayVertexBuffer(vao, 0, vbo_, 0, sizeof(Vertex));

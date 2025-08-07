@@ -6,6 +6,7 @@
 #include <sstream>
 
 #include "error.h"
+#include "material.h"
 
 namespace frengine {
 class Program {
@@ -160,6 +161,54 @@ class Program {
                                        uniform_name)});
     }
     glUniform1f(location, value);
+    return {};
+  }
+
+  auto SetMaterial(const std::string& uniform_name, const Material& value) const
+      -> std::expected<void, Error> {
+    glUseProgram(program_);
+
+    size_t diffuse_num = 1;
+    for (size_t i = 0; i < value.textures.size(); ++i) {
+      value.textures.at(i).Bind(i);
+
+      std::string diffuse_texture_uniform_name{};
+      if (value.textures.at(i).Type() == Texture::Type::Diffuse) {
+        diffuse_texture_uniform_name =
+            "material.texture_diffuse_" + std::to_string(diffuse_num);
+      }
+
+      if (const auto res = Set1i(diffuse_texture_uniform_name, i); !res) {
+        return std::unexpected(
+            Error{.message = std::format("Could not set uniform '{}'",
+                                         diffuse_texture_uniform_name)});
+      }
+    }
+    if (const auto res =
+            SetVec3(uniform_name + ".ambient_color", value.ambient_color);
+        !res) {
+      return std::unexpected(Error{
+          .message = std::format("Could not set material.ambient_color")});
+    }
+
+    if (const auto res = SetVec3("material.ambient_color", value.ambient_color);
+        !res) {
+      std::println(std::cerr, "Could not set material.ambient_color uniform");
+    }
+    if (const auto res = SetVec3("material.diffuse_color", value.diffuse_color);
+        !res) {
+      std::println(std::cerr, "Could not set material.diffuse_color uniform");
+    }
+    if (const auto res =
+            SetVec3("material.specular_color", value.specular_color);
+        !res) {
+      std::println(std::cerr, "Could not set material.specular_color uniform");
+    }
+    if (const auto res = Set1F("material.shininess", value.shininess); !res) {
+      std::println(std::cerr, "Could not set material.shininess uniform");
+    }
+
+    // glUniform1f(location, value);
     return {};
   }
 };
