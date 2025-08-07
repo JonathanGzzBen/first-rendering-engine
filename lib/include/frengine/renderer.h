@@ -77,7 +77,15 @@ class Renderer {
           continue;
         }
         if (const auto res = program.SetVec3(
-                std::format("point_light_positions[{}]", point_lights_count),
+                std::format("point_lights[{}].color", point_lights_count),
+                point_light->color());
+            !res) {
+          return std::unexpected(
+              Error{.message = std::format("Could not set point light: {}",
+                                           point_lights_count)});
+        }
+        if (const auto res = program.SetVec3(
+                std::format("point_lights[{}].position", point_lights_count),
                 point_light->position());
             !res) {
           return std::unexpected(
@@ -86,6 +94,11 @@ class Renderer {
         }
         point_lights_count++;
       }
+    }
+    if (const auto res = program.Set1i("num_point_lights", point_lights_count);
+        !res) {
+      return std::unexpected(
+          Error{.message = "Could not set num_point_lights"});
     }
 
     glBindVertexArray(0);

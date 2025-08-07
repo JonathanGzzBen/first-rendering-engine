@@ -211,7 +211,7 @@ auto main() -> int {
           glm::translate(glm::mat4(1.0F), glm::vec3(1.0F, 0.0F, 0.0F))});
 
   auto point_light =
-      frengine::PointLight(glm::vec3(0.0, 0.0, -1.0), glm::vec3(1.0, 1.0, 1.0));
+      frengine::PointLight(glm::vec3(0.0, 0.0, -1.0), glm::vec3(1.0, 0.0, 0.0));
   scene.AddLight(&point_light);
 
   glEnable(GL_DEPTH_TEST);
