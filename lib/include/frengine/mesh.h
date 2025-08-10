@@ -103,7 +103,7 @@ class Mesh : public IRenderable {
   // IRenderable
   auto Draw(const Program& program, const unsigned int vao) const
       -> void override {
-    if (const auto res = program.SetMaterial("material", material_); !res) {
+    if (const auto res = program.SetUniforms().SetMaterial("material", material_); !res) {
       std::println(std::cerr, "Could not set material: {}",
                    res.error().message);
     }

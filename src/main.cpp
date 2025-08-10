@@ -11,6 +11,7 @@
 #include "frengine/program.h"
 #include "frengine/renderer.h"
 #include "frengine/texture.h"
+#include "frengine/uniform_setter.h"
 
 auto glfw_error_callback(int error, const char *description) -> void {
   std::println(std::cerr, "GLFW error {}: {}", error, description);
@@ -222,7 +223,7 @@ auto main() -> int {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (const auto res =
-            texture_program->get()->SetVec3("viewPos", camera.Position());
+            texture_program->get()->SetUniforms().SetVec3("viewPos", camera.Position());
         !res) {
       std::println(std::cerr, "Could not set viewPos uniform: {}", "viewPos");
       glfwTerminate();
